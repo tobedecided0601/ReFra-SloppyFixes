@@ -5,11 +5,6 @@
 
 package com.dot.gallery.feature.setup.ui
 
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -32,7 +27,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -123,15 +117,8 @@ fun SetupWizard(
     val colorTertiary = MaterialTheme.colorScheme.tertiaryContainer
     val containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)
 
-    val transition = rememberInfiniteTransition()
-    val fraction by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 8_000),
-            repeatMode = RepeatMode.Reverse
-        )
-    )
+    // Static: the old 8s infinite gradient animation redrew the full screen every frame.
+    val fraction = 0.5f
     Scaffold(
         modifier = modifier
             .hazeSource(LocalHazeState.current)
