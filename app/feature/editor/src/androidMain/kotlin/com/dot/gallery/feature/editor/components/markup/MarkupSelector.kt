@@ -411,6 +411,9 @@ private fun MarkupSelectorTablet(
     SupportiveLayout(
         isSupportingPanel = true
     ) {
+        // Same width for the colour bars and the blur/mosaic sliders, so switching tools
+        // doesn't change the side panel's width and resize the image preview.
+        Box(modifier = Modifier.width(260.dp)) {
         if (isEffectBrush) {
             BrushEffectControls(
                 modifier = Modifier.width(260.dp),
@@ -446,6 +449,7 @@ private fun MarkupSelectorTablet(
                     setEffectiveColor(Color(HSVToColor((effectiveColor.alpha * 255).toInt(), hsv)))
                 }
             )
+        }
         }
 
         SupportiveLazyLayout(
