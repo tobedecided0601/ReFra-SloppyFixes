@@ -1,0 +1,50 @@
+name: Debug APK
+
+# Builds a debug APK that installs next to the normal app (different app id, no signing
+# secrets needed). Download it from the run's "Artifacts" section.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - slopped/**
+
+concurrency:
+  group: debug-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Install pinned native CMake
+        run: |
+          curl -fsSL "https://dl.google.com/android/repository/cmake-3.31.6-linux.zip" -o /tmp/cmake.zip
+          unzip -q /tmp/cmake.zip -d "$ANDROID_HOME/cmake/3.31.6"
+          rm /tmp/cmake.zip
+      - name: Free disk space
+        run: sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/powershell || true
+      - name: Fix permissions
+        run: chmod +x ./gradlew
+      - name: Tune Gradle for CI
+        run: |
+          echo "org.gradle.jvmargs=-Xmx4g -Dfile.encoding=UTF-8" >> gradle.properties
+          echo "org.gradle.workers.max=2" >> gradle.properties
+      - name: Build debug APK
+        run: ./gradlew --build-cache :app:androidApp:assembleUniversalNoMLDebug
+      - uses: actions/upload-artifact@v5
+        with:
+          name: refra-debug-apk
+          path: |
+            app/androidApp/build/outputs/apk-renamed/**/*.apk
+            app/androidApp/build/outputs/apk/**/*.apk
+          if-no-files-found: error
