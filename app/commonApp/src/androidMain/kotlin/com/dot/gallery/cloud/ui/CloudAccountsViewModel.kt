@@ -52,6 +52,9 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -186,11 +189,18 @@ class CloudAccountsViewModel @Inject constructor(
     private val _localAlbums = MutableStateFlow<List<Album>>(emptyList())
     val localAlbums: StateFlow<List<Album>> = _localAlbums.asStateFlow()
 
+    private var localAlbumsJob: Job? = null
+
     private fun loadLocalAlbums() {
-        viewModelScope.launch {
-            mediaRepository.getAlbums(MediaOrder.Label(OrderType.Ascending)).collect { resource ->
-                _localAlbums.value = (resource.data ?: emptyList()).filter { it.uri.scheme != "cloud" }
-            }
+        // Cancel the previous collector: every initAddServer() used to leave another live
+        // collection of the whole albums query running, which made the setup screen lag.
+        localAlbumsJob?.cancel()
+        localAlbumsJob = viewModelScope.launch {
+            mediaRepository.getAlbums(MediaOrder.Label(OrderType.Ascending))
+                .map { resource -> (resource.data ?: emptyList()).filter { it.uri.scheme != "cloud" } }
+                .flowOn(Dispatchers.Default)
+                .distinctUntilChanged()
+                .collect { _localAlbums.value = it }
         }
     }
 
