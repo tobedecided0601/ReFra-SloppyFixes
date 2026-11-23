@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -224,6 +225,15 @@ private fun MarkupSelectorPhone(
             Spacer(modifier = Modifier.width(8.dp))
         }
 
+        // Keep the controls area one fixed height across tools. Pen/highlighter show a single
+        // row of colours while blur/mosaic show two sliders, and the difference resized the
+        // image preview every time the tool changed.
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = if (faceDetectAvailable) 160.dp else 112.dp),
+            contentAlignment = Alignment.TopCenter
+        ) {
         val isText = drawMode == DrawMode.Text
         val textColorsEnabled = !isText || selectedTextIndex in textAnnotations.indices
 
@@ -258,7 +268,7 @@ private fun MarkupSelectorPhone(
                 faceDetectAvailable = faceDetectAvailable,
                 isDetectingFaces = isDetectingFaces
             )
-            return@Column
+            return@Box
         }
 
         // Color dots row in dark rounded container
@@ -341,6 +351,7 @@ private fun MarkupSelectorPhone(
                     Spacer(modifier = Modifier.width(4.dp))
                 }
             }
+        }
         }
     }
 }
